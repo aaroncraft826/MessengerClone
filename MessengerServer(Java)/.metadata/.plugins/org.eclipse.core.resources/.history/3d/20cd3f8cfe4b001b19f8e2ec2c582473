@@ -1,0 +1,175 @@
+import java.util.LinkedList;
+import java.util.HashMap;
+import java.io.*;
+import java.net.Socket;
+import java.lang.StringBuilder;
+import java.lang.StringBuffer;
+
+public class ClientHandler implements Runnable{
+	private final Socket sock;
+	private final DataInputStream dis;
+	private final DataOutputStream dos;
+
+	LinkedList<ClientHandler> clients;
+	private LinkedList<String> chat;
+	private Room crntRoom = null;
+	
+	private String name = "Anonymous";
+	
+	private boolean running = true;
+	
+	public ClientHandler(Socket sock, DataInputStream dis, DataOutputStream dos, LinkedList<String> chat, LinkedList<ClientHandler> clients) {
+		this.sock = sock;
+		this.dis = dis;
+		this.dos = dos;
+		this.chat = chat;
+		this.clients = clients;
+	}
+	
+	@Override
+	public void run() {
+		String recieved = "";
+		while(true) {
+			try {	
+				recieved = dis.readUTF();
+				
+				if(recieved.length() < 4) {
+					System.out.println("Error: Incorrect Message Length");
+					//dos.writeUTF("FAL|");
+				}else if(!readMessage(recieved)) {
+					System.out.println("Error: Invalid Message");
+					//dos.writeUTF("FAL|");
+				}else {
+					//dos.writeUTF("SUC|");
+				}
+			}catch(EOFException e) {
+				e.printStackTrace();
+				System.out.println("Closing sockets");
+		        try{ sock.close(); }catch(Exception a){ }
+		        try{ dis.close(); }catch(Exception b){ }
+		        try{ dos.close(); }catch(Exception c){ }
+		        running = false;
+				return;
+			}catch(IOException e) {
+				e.printStackTrace();
+		        running = false;
+				return;
+			}
+		}
+		
+		/*String recieved = "";
+		try {	
+			recieved = dis.readUTF();
+			
+			if(recieved.length() < 4) {
+				System.out.println("Error: Incorrect Message Length");
+				dos.writeUTF("FAL|");
+			}else if(!readMessage(recieved)) {
+				System.out.println("Error: Invalid Message");
+				dos.writeUTF("FAL|");
+			}else {
+				dos.writeUTF("SUC|");
+			}
+		}catch(EOFException e) {
+			e.printStackTrace();
+		}catch(IOException e) {
+			e.printStackTrace();
+		}
+		
+		//Close everything
+		try {
+			dis.close();
+			dos.close();
+			sock.close();
+		}catch(IOException e) {
+			e.printStackTrace();
+		}
+		return;*/
+	}
+	
+	public boolean isRunning() {
+		return running;
+	}
+	
+	public Socket getSock() {
+		return sock;
+	}
+	
+	private boolean readMessage(String msg) {
+		System.out.println("Recieving message: " + msg);
+		String type = msg.substring(0, 4);
+		boolean isSuccessful = false;
+		switch(type) {
+			//send message
+			case "MSG|": 
+				synchronized(chat) {
+					chat.addFirst(name + ": " + readMsgSeg(msg, 4));
+					sendChatToAllClients();
+					isSuccessful = true;
+				}
+				break;
+				
+			//change name
+			case "NAM|": 
+				name = readMsgSeg(msg, 4);
+				chat.addFirst(name + " has entered the server.");
+				sendChat();
+				isSuccessful = true;
+				break;
+				
+			default:
+				System.out.println("ERROR: Invalid Message");
+				break;
+		}
+		return isSuccessful;
+	}
+	
+	private String readMsgSeg(String msg, int index) {
+		StringBuffer numberStr = new StringBuffer(msg.length());
+		
+		int i = index;
+		while(msg.charAt(i) != '|' && i < msg.length()) {
+			numberStr.append(msg.charAt(i));
+			i++;
+		}
+		return numberStr.toString();
+	}
+	
+	public void sendChatToAllClients() {
+		System.out.println("Updating Every Client's chat");
+		for(ClientHandler ch : clients) {
+			synchronized(ch) {
+				if(ch.isRunning()) {
+					ch.sendChat();
+				}else {
+					clients.remove(ch);
+				}
+			}
+		}
+	}
+	
+	public void sendChat() {
+		for(String str : chat) {
+			try {
+				System.out.println("Writing Message: " + str);
+				dos.writeUTF(str);
+			}catch(EOFException e) {
+				e.printStackTrace();
+				return;
+			}catch(IOException e) {
+				e.printStackTrace();
+				return;
+			}
+		}
+		try {
+			System.out.println("ENDING CHATSEND");
+			dos.writeUTF("END|");
+		}catch(EOFException e) {
+			e.printStackTrace();
+			return;
+		}catch(IOException e) {
+			e.printStackTrace();
+			return;
+		}
+	}
+}

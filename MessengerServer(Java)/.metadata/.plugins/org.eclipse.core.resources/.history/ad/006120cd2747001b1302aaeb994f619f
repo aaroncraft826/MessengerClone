@@ -1,0 +1,10 @@
+import java.util.LinkedList;
+import java.net.Socket;
+
+public class Room {
+	private LinkedList<Socket> party = new LinkedList<Socket>();
+	
+	public void clear() {
+		
+	}
+}

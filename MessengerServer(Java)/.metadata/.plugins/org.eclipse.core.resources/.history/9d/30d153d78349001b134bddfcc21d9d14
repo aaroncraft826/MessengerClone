@@ -1,0 +1,14 @@
+import java.util.LinkedList;
+
+public class Room {
+	private LinkedList<ClientHandler> party = new LinkedList<ClientHandler>();
+	private int roomId;
+	
+	public Room(int roomId) {
+		this.roomId = roomId;
+	}
+	
+	public void addClient(ClientHandler client) {
+		party.addLast(client);
+	}
+}

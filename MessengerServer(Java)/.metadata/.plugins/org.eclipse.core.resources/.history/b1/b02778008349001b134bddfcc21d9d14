@@ -1,0 +1,17 @@
+import java.util.LinkedList;
+import java.io.FileDescriptor;
+import java.io.IOException;
+import java.net.Socket;
+
+public class Room {
+	private LinkedList<ClientHandler> party = new LinkedList<ClientHandler>();
+	private int roomId;
+	
+	public Room(int roomId) {
+		this.roomId = roomId;
+	}
+	
+	public void addClient(ClientHandler client) {
+		party.addLast(client);
+	}
+}

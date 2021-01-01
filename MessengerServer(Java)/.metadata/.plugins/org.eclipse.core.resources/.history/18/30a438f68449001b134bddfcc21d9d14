@@ -1,0 +1,14 @@
+import java.util.LinkedList;
+
+public class Room {
+	final private LinkedList<String> chat = new LinkedList<String>();
+	final private int roomId;
+	
+	public Room(int roomId) {
+		this.roomId = roomId;
+	}
+	
+	public void addMessage("") {
+		
+	}
+}

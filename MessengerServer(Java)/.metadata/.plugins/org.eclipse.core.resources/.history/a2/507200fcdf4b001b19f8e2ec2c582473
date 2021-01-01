@@ -1,0 +1,34 @@
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.util.LinkedList;
+
+public class Server {
+
+	public Server() {
+		
+	}
+	
+	public void start(int port) {
+		LinkedList<ClientHandler> clients = new LinkedList<ClientHandler>();
+		LinkedList<String> chat = new LinkedList<String>();
+		
+		ServerSocket serverSocket = null;
+		
+		try {
+			serverSocket = new ServerSocket(port, 10);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		//accept client socket
+		acceptClients(serverSocket, clients, chat);
+		
+		//close server
+		try{
+			serverSocket.close();
+		}catch(IOException e) {
+			e.printStackTrace();
+		}
+	}
+}

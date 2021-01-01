@@ -1,0 +1,64 @@
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.LinkedList;
+
+public class Server implements Runnable{
+
+	private int port;
+	
+	public Server(int port) {
+		this.port = port;
+	}
+	
+	@Override
+	public void run() {
+		LinkedList<ClientHandler> clients = new LinkedList<ClientHandler>();
+		LinkedList<String> chat = new LinkedList<String>();
+		
+		ServerSocket serverSocket = null;
+		
+		try {
+			serverSocket = new ServerSocket(port, 10);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		//accept client socket
+		acceptClients(serverSocket, clients, chat);
+		
+		//close server
+		try{
+			serverSocket.close();
+		}catch(IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void stop() {
+		
+	}
+
+	//accepts clients
+	private static void acceptClients(ServerSocket serverSocket, LinkedList<ClientHandler> clients, LinkedList<String> chat) {
+		while(true) {
+			try{
+				Socket client = serverSocket.accept(); 
+				System.out.println("A new client has connected: " + client.getInetAddress());
+
+				DataInputStream dis = new DataInputStream(client.getInputStream());
+				DataOutputStream dos = new DataOutputStream(client.getOutputStream());
+				
+				System.out.println("Now creating thread for client " + client.getInetAddress());
+				ClientHandler ch = new ClientHandler(client, dis, dos, chat);
+				Thread t = new Thread(ch);
+				t.start();
+			}catch(IOException e){
+				e.printStackTrace();
+			}
+		}
+	}
+}

@@ -1,0 +1,12 @@
+import java.util.LinkedList;
+import java.io.IOException;
+import java.net.Socket;
+
+public class Room {
+	private LinkedList<ClientHandler> party = new LinkedList<Socket>();
+	private String name;
+	
+	public void clearParty() {
+		
+	}
+}
